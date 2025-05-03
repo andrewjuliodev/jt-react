@@ -1,7 +1,7 @@
 // src/components/animations/IntroAnimation.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 
 interface IntroAnimationProps {
   onComplete: () => void;
@@ -36,24 +36,21 @@ const glowBurst = keyframes`
   }
 `;
 
-const TextWrapper = styled(motion.div)<{ blur?: string }>`
+const TextWrapper = styled(motion.div)<{ blur?: string; fontSize?: string }>`
   position: absolute;
   display: inline-flex;
   font-family: "Cal Sans", sans-serif;
-  font-size: 4.5rem;
+  font-size: ${props => props.fontSize || "4.5rem"};
   font-weight: bold;
   color: #000;
   filter: ${({ blur }) => blur || "none"};
   z-index: 1;
   white-space: nowrap;
+  transition: font-size 0.8s ease-in-out;
 `;
 
 const Letter = styled(motion.span)`
   display: inline-block;
-  
-  &.glow-animation {
-    animation: ${glowBurst} 1s ease-out;
-  }
 `;
 
 const Space = styled.span`
@@ -63,11 +60,11 @@ const Space = styled.span`
 
 const GlowingStudioText = styled(motion.span)`
   letter-spacing: 0.03em;
-  animation: ${glowBurst} 1s ease-out infinite;
+  animation: ${css`${glowBurst} 1s ease-out infinite`};
 `;
 
 const GlowingLetter = styled(motion.span)`
-  animation: ${glowBurst} 1s ease-out infinite;
+  animation: ${css`${glowBurst} 1s ease-out infinite`};
 `;
 
 // Navbar styles
@@ -86,6 +83,7 @@ const Header = styled.header`
   align-items: center;
   animation: ${fadeIn} 1s ease forwards;
   z-index: 1000;
+  transition: top 0.8s ease-in-out;
 `;
 
 const NavList = styled.ul`
@@ -115,7 +113,7 @@ const NavLink = styled.a`
   transition: text-shadow 0.3s ease;
   
   &:hover {
-    animation: ${glowBurst} 1s ease-out infinite;
+    animation: ${css`${glowBurst} 1s ease-out infinite`};
   }
 `;
 
@@ -123,6 +121,8 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const name = "JulioTompsett";
   const [retract, setRetract] = useState(false);
   const [showJT, setShowJT] = useState(false);
+  const [slideToHeader, setSlideToHeader] = useState(false);
+  const [hideRetractedJT, setHideRetractedJT] = useState(false);
   const [tOffset, setTOffset] = useState(0);
   const [blur, setBlur] = useState<"none"|"blur(5px)">("none");
   const [textPos, setTextPos] = useState<{ top: string; left: string }>({
@@ -144,7 +144,9 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setShowJT(true);
         setBlur("none");
       }, 3000),
-      setTimeout(onComplete, 3200),
+      setTimeout(() => setHideRetractedJT(true), 3500), // Hide the retracted JT
+      setTimeout(() => setSlideToHeader(true), 4000),   // Wait 500ms more before sliding
+      setTimeout(onComplete, 5000),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
@@ -165,41 +167,17 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
 
   // render initial letters
   const renderInitial = () =>
-    name.split("").map((c,i) => {
-      const delay = i * 0.1;
-      const isLastLetter = i === name.length - 1;
-      
-      return (
-        <Letter key={i}
-          ref={el => {
-            if (i===0) jRef.current = el!;
-            lettersRef.current[i] = el!;
-          }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ 
-            opacity: 1, 
-            y: 0,
-          }}
-          transition={{ 
-            opacity: { duration: 0.8, delay },
-            y: { duration: 0.8, delay },
-          }}
-          className={isLastLetter ? "trigger-glow" : ""}
-          onAnimationComplete={() => {
-            if (isLastLetter) {
-              // Add glowBurst class to all letters after the last one appears
-              lettersRef.current.forEach(letter => {
-                if (letter) {
-                  letter.classList.add("glow-animation");
-                }
-              });
-            }
-          }}
-        >
-          {c}
-        </Letter>
-      );
-    });
+    name.split("").map((c,i) => (
+      <Letter key={i}
+        ref={el => {
+          if (i===0) jRef.current = el!;
+          lettersRef.current[i] = el!;
+        }}
+        initial={{ opacity:0, y:10 }}
+        animate={{ opacity:1, y:0 }}
+        transition={{ duration:0.8, delay:i*0.1 }}
+      >{c}</Letter>
+    ));
 
   const renderRetract = () =>
     name.split("").map((c,i) => {
@@ -224,19 +202,21 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   return (
     <Container>
       {/* JulioTompsett or retract */}
-      <TextWrapper
-        blur={blur}
-        initial={{ opacity:0 }}
-        animate={{ opacity:1 }}
-        transition={{ duration:0.6 }}
-        style={{
-          top: textPos.top,
-          left: leftOffset,
-          transform: "translateY(-50%)"
-        }}
-      >
-        {!retract && !showJT ? renderInitial() : renderRetract()}
-      </TextWrapper>
+      {!hideRetractedJT && (
+        <TextWrapper
+          blur={blur}
+          initial={{ opacity:0 }}
+          animate={{ opacity:1 }}
+          transition={{ duration:0.6 }}
+          style={{
+            top: textPos.top,
+            left: leftOffset,
+            transform: "translateY(-50%)"
+          }}
+        >
+          {!retract && !showJT ? renderInitial() : renderRetract()}
+        </TextWrapper>
+      )}
 
       {/* JT Studio */}
       {showJT && (
@@ -244,12 +224,14 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
           blur="none"
           initial={{ opacity:0 }}
           animate={{ opacity:1 }}
-          transition={{ duration:1 }}
+          transition={{ opacity: { duration: 1 } }}
+          fontSize={slideToHeader ? "2.2rem" : "4.5rem"}
           style={{
-            top: textPos.top,
+            top: slideToHeader ? "60px" : textPos.top,
             left: leftOffset,
             transform: "translateY(-50%)",
-            zIndex:2
+            zIndex: 2,
+            transition: "top 0.8s ease-in-out, font-size 0.8s ease-in-out"
           }}
         >
           <GlowingLetter initial={{opacity:0}} animate={{opacity:1}} transition={{duration:0.8}}>J</GlowingLetter>
@@ -263,7 +245,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
 
       {/* Navbar uses same top + translateY */}
       {showJT && (
-        <Header style={{ top: textPos.top }}>
+        <Header style={{ top: slideToHeader ? "60px" : textPos.top }}>
           <NavList>
             <NavItem><NavLink href="#services">Services</NavLink></NavItem>
             <NavItem><NavLink href="#portfolio">Pricing</NavLink></NavItem>
