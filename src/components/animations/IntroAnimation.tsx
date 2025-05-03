@@ -50,6 +50,10 @@ const TextWrapper = styled(motion.div)<{ blur?: string }>`
 
 const Letter = styled(motion.span)`
   display: inline-block;
+  
+  &.glow-animation {
+    animation: ${glowBurst} 1s ease-out;
+  }
 `;
 
 const Space = styled.span`
@@ -59,11 +63,11 @@ const Space = styled.span`
 
 const GlowingStudioText = styled(motion.span)`
   letter-spacing: 0.03em;
-  animation: ${glowBurst} 1s ease-out;
+  animation: ${glowBurst} 1s ease-out infinite;
 `;
 
 const GlowingLetter = styled(motion.span)`
-  animation: ${glowBurst} 1s ease-out;
+  animation: ${glowBurst} 1s ease-out infinite;
 `;
 
 // Navbar styles
@@ -101,29 +105,17 @@ const NavList = styled.ul`
 
 const NavItem = styled.li`
   position: relative;
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: -6px;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: #39e6d0;
-    transition: width 0.3s ease;
-  }
-  &:hover:after {
-    width: 100%;
-  }
 `;
 
 const NavLink = styled.a`
   color: #333;
   text-decoration: none;
-  font-weight: 400;
+  font-weight: 500;
   font-size: 1.25rem;
-  transition: color 0.3s ease;
+  transition: text-shadow 0.3s ease;
+  
   &:hover {
-    color: #39e6d0;
+    animation: ${glowBurst} 1s ease-out infinite;
   }
 `;
 
@@ -173,17 +165,41 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
 
   // render initial letters
   const renderInitial = () =>
-    name.split("").map((c,i) => (
-      <Letter key={i}
-        ref={el => {
-          if (i===0) jRef.current = el!;
-          lettersRef.current[i] = el!;
-        }}
-        initial={{ opacity:0, y:10 }}
-        animate={{ opacity:1, y:0 }}
-        transition={{ duration:0.8, delay:i*0.1 }}
-      >{c}</Letter>
-    ));
+    name.split("").map((c,i) => {
+      const delay = i * 0.1;
+      const isLastLetter = i === name.length - 1;
+      
+      return (
+        <Letter key={i}
+          ref={el => {
+            if (i===0) jRef.current = el!;
+            lettersRef.current[i] = el!;
+          }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0,
+          }}
+          transition={{ 
+            opacity: { duration: 0.8, delay },
+            y: { duration: 0.8, delay },
+          }}
+          className={isLastLetter ? "trigger-glow" : ""}
+          onAnimationComplete={() => {
+            if (isLastLetter) {
+              // Add glowBurst class to all letters after the last one appears
+              lettersRef.current.forEach(letter => {
+                if (letter) {
+                  letter.classList.add("glow-animation");
+                }
+              });
+            }
+          }}
+        >
+          {c}
+        </Letter>
+      );
+    });
 
   const renderRetract = () =>
     name.split("").map((c,i) => {
