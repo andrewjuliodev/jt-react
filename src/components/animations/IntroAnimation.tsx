@@ -295,6 +295,11 @@ const NavList = styled.ul<{ mobileMenuOpen?: boolean }>`
 
 const NavItem = styled.li`
   position: relative;
+  margin: 0 5px;
+  
+  @media (max-width: 768px) {
+    margin: 10px 0;
+  }
 `;
 
 const NavLink = styled.a<{ darkMode?: boolean }>`
@@ -303,6 +308,7 @@ const NavLink = styled.a<{ darkMode?: boolean }>`
   font-weight: 500;
   font-size: 1.25rem;
   transition: text-shadow 0.3s ease, color 0.8s ease-in-out;
+  padding: 8px 16px;
   
   &:hover {
     animation: ${css`${glowBurst} 1s ease-out infinite`};
@@ -311,6 +317,7 @@ const NavLink = styled.a<{ darkMode?: boolean }>`
   @media (max-width: 768px) {
     color: #fff;
     font-size: 1.5rem;
+    padding: 12px 20px;
   }
 `;
 
@@ -562,19 +569,26 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         <DarkModeBullet show={showDarkModeBullet} />
       </HeaderContainer>
       
-      {/* Profile image in bottom right - slides in immediately, retreats to right when triggered */}
+      {/* Profile image with diagonal movement */}
       <ProfileImage 
         src="/ja_left.png" 
         alt="Profile" 
-        initial={{ y: "100%" }}
+        initial={{ 
+          x: "100vw", 
+          y: "100vh" 
+        }}
         animate={{ 
-          y: 0,
           x: retreatImage ? "100vw" : 0,
+          y: retreatImage ? "100vh" : 0,
           opacity: retreatImage ? 0 : 1
         }}
         transition={{ 
-          y: { duration: 2, ease: "easeOut", delay: 0.2 },
-          x: { duration: 1.2, ease: "easeIn" },
+          x: retreatImage 
+            ? { duration: 1.2, ease: "easeIn" } 
+            : { duration: 2, ease: "easeOut", delay: 0.2 },
+          y: retreatImage 
+            ? { duration: 1.2, ease: "easeIn" } 
+            : { duration: 2, ease: "easeOut", delay: 0.2 },
           opacity: { duration: 1, ease: "easeIn" }
         }}
       />
