@@ -1,4 +1,3 @@
-// src/components/animations/IntroAnimation.tsx
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
@@ -11,10 +10,10 @@ const Container = styled.div`
   position: relative;
   width: 100vw;
   height: 100vh;
-  padding-left: 10vw;
+  padding-left: 10vw; /* Keeps left-aligned padding */
   display: flex;
-  align-items: center;      // vertical centering
-  justify-content: flex-start; // left alignment
+  align-items: center; /* vertical centering */
+  justify-content: flex-start; /* left-aligned horizontally */
   background: #fff;
   overflow: hidden;
 
@@ -34,7 +33,7 @@ const TextWrapper = styled(motion.div)`
   font-weight: bold;
   color: #000;
   position: relative;
-  z-index: 1; // Allow layering
+  z-index: 1;
 
   @media (max-width: 768px) {
     font-size: 3rem;
@@ -67,8 +66,8 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   useEffect(() => {
     const timers = [
       setTimeout(() => setRetract(true), 2500),
-      setTimeout(() => setShowJT(true), 3000),
-      setTimeout(onComplete, 6200),
+      setTimeout(() => setShowJT(true), 3000), // Show JT Studio soon after animation starts
+      setTimeout(onComplete, 3200), // Set navbar visibility just a bit after "JT Studio" appears
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
@@ -84,7 +83,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setTOffset(jRect.right - tRect.left);
         setTextPosition({
           top: `${jRect.top + window.scrollY}px`,
-          left: `${jRect.left + window.scrollX}px`,
+          left: `${jRect.left + window.scrollX}px`, // Ensure "left" is calculated based on the original position
         });
       }
     }

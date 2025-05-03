@@ -1,28 +1,19 @@
+// src/App.tsx
 import React, { useState, useEffect } from 'react';
 import IntroAnimation from './components/animations/IntroAnimation';
 import Navbar from './components/layout/Navbar';
 import GlobalStyle from './styles/GlobalStyle';
 
 const App: React.FC = () => {
-  const [animationComplete, setAnimationComplete] = useState<boolean>(false);
-
-  useEffect(() => {
-    // For development purposes, you can set this to true to skip the animation
-    // setAnimationComplete(true);
-  }, []);
-
-  const handleAnimationComplete = () => {
-    setAnimationComplete(true);
-  };
+  const [animationComplete, setAnimationComplete] = useState(false);
 
   return (
     <>
       <GlobalStyle />
-      {!animationComplete ? (
-        <IntroAnimation onComplete={handleAnimationComplete} />
-      ) : (
-        <Navbar />
-      )}
+      <div style={{ width: '100vw', height: '100vh' }}>
+        <IntroAnimation onComplete={() => setAnimationComplete(true)} />
+        {animationComplete && <Navbar />}
+      </div>
     </>
   );
 };

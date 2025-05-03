@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styled, { keyframes } from 'styled-components';
 
 // Fade-in animation
@@ -11,226 +11,81 @@ const fadeIn = keyframes`
   }
 `;
 
-// Glassmorphic Header
+// Main full screen container
 const Header = styled.header`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  padding: 1rem 2rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   animation: ${fadeIn} 1s ease forwards;
   z-index: 1000;
-  
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
 `;
 
-// Logo styling
-const Logo = styled.div`
-  font-family: "Cal Sans", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 400;
-  color: #000; /* Changed to black as requested */
-  display: flex;
-  align-items: center;
-  font-style: normal;
-  
-  @media (max-width: 768px) {
-    font-size: 1.2rem;
-  }
-`;
-
-// Navigation menu
-const Nav = styled.nav`
-  display: flex;
-  align-items: center;
-  
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;
-
-// Mobile menu button
-const MenuButton = styled.button`
-  display: none;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #000;
-  
-  @media (max-width: 768px) {
-    display: block;
-  }
-`;
-
-// Mobile menu
-const MobileMenu = styled.div<{ isOpen: boolean }>`
-  display: ${props => (props.isOpen ? 'flex' : 'none')};
-  flex-direction: column;
-  position: fixed;
-  top: 70px;
-  left: 0;
-  right: 0;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 1rem;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  z-index: 999;
-`;
-
-// Navigation list
+// Nav list in a row
 const NavList = styled.ul`
   display: flex;
+  gap: 3rem;
   list-style: none;
-  gap: 2rem;
-  
-  @media (max-width: 1024px) {
+  padding: 0;
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 200;
+  font-style: normal;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
     gap: 1.5rem;
   }
 `;
 
-// Mobile navigation list
-const MobileNavList = styled.ul`
-  display: flex;
-  flex-direction: column;
-  list-style: none;
-  gap: 1.5rem;
-`;
-
-// Navigation item
+// Nav item with hover effect
 const NavItem = styled.li`
   position: relative;
-  
+
   &:after {
     content: '';
     position: absolute;
-    bottom: -5px;
+    bottom: -6px;
     left: 0;
     width: 0;
     height: 2px;
     background-color: #39e6d0;
     transition: width 0.3s ease;
   }
-  
+
   &:hover:after {
     width: 100%;
   }
 `;
 
-// Mobile navigation item
-const MobileNavItem = styled.li`
-  position: relative;
-  padding: 0.5rem 0;
-  
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background-color: #39e6d0;
-    transition: width 0.3s ease;
-  }
-  
-  &:hover:after {
-    width: 100%;
-  }
-`;
-
-// Navigation link
+// Nav link styling
 const NavLink = styled.a`
   color: #333;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 400;
+  font-size: 1.25rem;
   transition: color 0.3s ease;
-  
+
   &:hover {
     color: #39e6d0;
   }
 `;
 
 const Navbar: React.FC = () => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [scrolled]);
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
   return (
-    <>
-      <Header>
-        <Logo>JT Studio</Logo>
-        <Nav>
-          <NavList>
-            <NavItem>
-              <NavLink href="#services">Services</NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink href="#pricing">Pricing</NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink href="#portfolio">Concept Portfolio</NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink href="#about">About</NavLink>
-            </NavItem>
-            <NavItem>
-              <NavLink href="#contact">Contact</NavLink>
-            </NavItem>
-          </NavList>
-        </Nav>
-        <MenuButton onClick={toggleMobileMenu}>
-          {mobileMenuOpen ? '✕' : '☰'}
-        </MenuButton>
-      </Header>
-      
-      <MobileMenu isOpen={mobileMenuOpen}>
-        <MobileNavList>
-          <MobileNavItem>
-            <NavLink href="#services">Services</NavLink>
-          </MobileNavItem>
-          <MobileNavItem>
-            <NavLink href="#pricing">Pricing</NavLink>
-          </MobileNavItem>
-          <MobileNavItem>
-            <NavLink href="#portfolio">Concept Portfolio</NavLink>
-          </MobileNavItem>
-          <MobileNavItem>
-            <NavLink href="#about">About</NavLink>
-          </MobileNavItem>
-          <MobileNavItem>
-            <NavLink href="#contact">Contact</NavLink>
-          </MobileNavItem>
-        </MobileNavList>
-      </MobileMenu>
-    </>
+    <Header>
+      <NavList>
+        <NavItem><NavLink href="#services">Services</NavLink></NavItem>
+        <NavItem><NavLink href="#portfolio">Pricing</NavLink></NavItem>
+        <NavItem><NavLink href="#contact">Contact</NavLink></NavItem>
+        <NavItem><NavLink href="#about">About</NavLink></NavItem>
+      </NavList>
+    </Header>
   );
 };
 
