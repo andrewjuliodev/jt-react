@@ -8,12 +8,14 @@ interface IntroAnimationProps {
 }
 
 const Container = styled.div`
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  padding-left: 10vw;
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  min-height: 100vh;
+  align-items: center;      // vertical centering
+  justify-content: flex-start; // left alignment
   background: #fff;
-  padding-left: 20%;
   overflow: hidden;
 
   @media (max-width: 768px) {
@@ -28,9 +30,11 @@ const Container = styled.div`
 const TextWrapper = styled(motion.div)`
   display: inline-flex;
   font-family: "Cal Sans", sans-serif;
-  font-size: 3.5rem;
+  font-size: 4.5rem;
   font-weight: bold;
   color: #000;
+  position: relative;
+  z-index: 1; // Allow layering
 
   @media (max-width: 768px) {
     font-size: 3rem;
@@ -45,10 +49,6 @@ const Letter = styled(motion.span)`
   display: inline-block;
 `;
 
-const StudioLetter = styled(motion.span)`
-  display: inline-block;
-`;
-
 const Space = styled.span`
   display: inline-block;
   width: 0.3em;
@@ -56,29 +56,23 @@ const Space = styled.span`
 
 const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const name = 'JulioTompsett';
-  const studioWord = 'Studio';
-
   const [retract, setRetract] = useState(false);
   const [showJT, setShowJT] = useState(false);
-  const [showStudio, setShowStudio] = useState(false);
-  const [isFading, setIsFading] = useState(false);
   const [tOffset, setTOffset] = useState(0);
+  const [textPosition, setTextPosition] = useState<{ top: string, left: string }>({ top: '50%', left: '10vw' });
 
   const jRef = useRef<HTMLSpanElement>(null);
   const lettersRef = useRef<HTMLSpanElement[]>([]);
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setRetract(true), 2500),        // start retract
-      setTimeout(() => setShowJT(true), 4000),        // show JT
-      setTimeout(() => setShowStudio(true), 4300),    // show Studio
-      setTimeout(() => setIsFading(true), 5800),      // fade out
-      setTimeout(onComplete, 6800),                   // complete
+      setTimeout(() => setRetract(true), 2500),
+      setTimeout(() => setShowJT(true), 3000),
+      setTimeout(onComplete, 6200),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
 
-  // measure T offset when it's time to retract
   useEffect(() => {
     if (retract) {
       const tIdx = name.indexOf('T');
@@ -88,23 +82,29 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         const jRect = jEl.getBoundingClientRect();
         const tRect = tEl.getBoundingClientRect();
         setTOffset(jRect.right - tRect.left);
+        setTextPosition({
+          top: `${jRect.top + window.scrollY}px`,
+          left: `${jRect.left + window.scrollX}px`,
+        });
       }
     }
   }, [retract, name]);
 
-  // Initial render: static letters
   const renderInitial = () => (
     <>
       {name.split('').map((char, i) => (
         <Letter
           key={i}
           ref={el => {
-            if (i === 0) {
-              jRef.current = el;
-            }
+            if (i === 0) jRef.current = el;
             lettersRef.current[i] = el!;
           }}
-          style={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.6,
+            delay: i * 0.08
+          }}
         >
           {char}
         </Letter>
@@ -112,7 +112,6 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     </>
   );
 
-  // During retract: animate letters
   const renderRetract = () => (
     <>
       {name.split('').map((char, i) => {
@@ -120,10 +119,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
           return (
             <Letter
               key={i}
-              ref={el => {
-                jRef.current = el;
-                lettersRef.current[i] = el!;
-              }}
+              ref={el => { jRef.current = el; lettersRef.current[i] = el!; }}
               style={{ opacity: 1 }}
             >
               J
@@ -134,9 +130,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
           return (
             <Letter
               key={i}
-              ref={el => {
-                lettersRef.current[i] = el!;
-              }}
+              ref={el => { lettersRef.current[i] = el!; }}
               initial={{ x: 0 }}
               animate={{ x: tOffset }}
               transition={{ type: 'tween', ease: 'linear', duration: 0.5 }}
@@ -150,7 +144,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
             key={i}
             initial={{ x: 0, opacity: 1 }}
             animate={{ x: `-${i}em`, opacity: 0 }}
-            transition={{ x: { duration: 0.8, delay: i * 0.05 }, opacity: { duration: 0.5, delay: i * 0.05 } }}
+            transition={{ x: { duration: 0.6, delay: i * 0.04 }, opacity: { duration: 0.4, delay: i * 0.04 } }}
           >
             {char}
           </Letter>
@@ -160,25 +154,38 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   );
 
   const renderJTStudio = () => (
-    <>
-      <Letter initial={{ opacity: 1 }} animate={{ opacity: isFading ? 0 : 1 }} transition={{ duration: 0.8 }}>
+    <TextWrapper
+      style={{
+        position: 'absolute',
+        top: textPosition.top, // Keep "JT Studio" aligned at the position of the original text
+        left: textPosition.left, // Match the left offset of "Julio Tompsett"
+        zIndex: 2, // Keep it on top of the retracted JT
+      }}
+    >
+      <Letter
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }} // JT fades in
+        transition={{ duration: 0.8 }}
+      >
         J
       </Letter>
-      <Letter initial={{ opacity: 1 }} animate={{ opacity: isFading ? 0 : 1 }} transition={{ duration: 0.8 }}>
+      <Letter
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }} // T fades in
+        transition={{ duration: 0.8 }}
+      >
         T
       </Letter>
       <Space />
-      {studioWord.split('').map((c, idx) => (
-        <StudioLetter
-          key={idx}
-          initial={{ opacity: 0, x: '0.5em' }}
-          animate={{ opacity: showStudio ? (isFading ? 0 : 1) : 0, x: showStudio ? 0 : '0.5em' }}
-          transition={{ opacity: { duration: 0.5, delay: idx * 0.1 }, x: { duration: 0.5, delay: idx * 0.1 } }}
-        >
-          {c}
-        </StudioLetter>
-      ))}
-    </>
+      <motion.span
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }} // Studio fades in smoothly
+        transition={{ duration: 1.6 }}
+        style={{ letterSpacing: '0.03em' }} // Slight gap between letters
+      >
+        Studio
+      </motion.span>
+    </TextWrapper>
   );
 
   return (
@@ -186,12 +193,13 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
       <TextWrapper
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.4 }}
       >
         {!retract && !showJT && renderInitial()}
         {retract && !showJT && renderRetract()}
-        {showJT && renderJTStudio()}
       </TextWrapper>
+
+      {showJT && renderJTStudio()}
     </Container>
   );
 };
