@@ -1,7 +1,6 @@
 // src/App.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import IntroAnimation from './components/animations/IntroAnimation';
-import Navbar from './components/layout/Navbar';
 import GlobalStyle from './styles/GlobalStyle';
 
 const App: React.FC = () => {
@@ -12,7 +11,6 @@ const App: React.FC = () => {
       <GlobalStyle />
       <div style={{ width: '100vw', height: '100vh' }}>
         <IntroAnimation onComplete={() => setAnimationComplete(true)} />
-        {animationComplete && <Navbar />}
       </div>
     </>
   );
