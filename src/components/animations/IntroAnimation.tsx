@@ -15,6 +15,15 @@ const Container = styled.div`
   overflow: hidden;
 `;
 
+const ProfileImage = styled(motion.img)`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: auto;
+  height: 90vh;
+  z-index: 1;
+`;
+
 const glowBurst = keyframes`
   0% {
     text-shadow:
@@ -47,6 +56,18 @@ const TextWrapper = styled(motion.div)<{ blur?: string; fontSize?: string }>`
   z-index: 1;
   white-space: nowrap;
   transition: font-size 0.8s ease-in-out;
+`;
+
+const SubtitleText = styled(motion.div)`
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: "Cal Sans", sans-serif;
+  font-size: 12rem;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.7);
+  text-align: center;
+  z-index: 1;
 `;
 
 const Letter = styled(motion.span)`
@@ -118,9 +139,12 @@ const NavLink = styled.a`
 `;
 
 const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
-  const name = "JulioTompsett";
+  const name = "JulioTompsett's";
   const [retract, setRetract] = useState(false);
   const [showJT, setShowJT] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(false);
+  const [fadeOutSubtitle, setFadeOutSubtitle] = useState(false);
+  const [retreatImage, setRetreatImage] = useState(false);
   const [slideToHeader, setSlideToHeader] = useState(false);
   const [hideRetractedJT, setHideRetractedJT] = useState(false);
   const [tOffset, setTOffset] = useState(0);
@@ -139,14 +163,23 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   // 2) Run the timing
   useEffect(() => {
     const timers = [
-      setTimeout(() => setRetract(true), 2500),
+      // Show subtitle after name appears
+      setTimeout(() => setShowSubtitle(true), 1000),
+      // Start fading out subtitle
+      setTimeout(() => setFadeOutSubtitle(true), 3500),
+      // Retract after 4.5s (2s longer than before)
+      setTimeout(() => setRetract(true), 4500),
       setTimeout(() => {
         setShowJT(true);
         setBlur("none");
-      }, 3000),
-      setTimeout(() => setHideRetractedJT(true), 3500), // Hide the retracted JT
-      setTimeout(() => setSlideToHeader(true), 4000),   // Wait 500ms more before sliding
-      setTimeout(onComplete, 5000),
+      }, 5000),
+      setTimeout(() => setHideRetractedJT(true), 5500), // Hide the retracted JT
+      // Start retreat of image when moving to header
+      setTimeout(() => {
+        setRetreatImage(true);
+      }, 6000),
+      setTimeout(() => setSlideToHeader(true), 6000),   // Moving to header at the same time
+      setTimeout(onComplete, 7000),
     ];
     return () => timers.forEach(clearTimeout);
   }, [onComplete]);
@@ -201,6 +234,23 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
 
   return (
     <Container>
+      {/* Profile image in bottom right - slides in immediately, retreats to right when triggered */}
+      <ProfileImage 
+        src="/ja_left.png" 
+        alt="Profile" 
+        initial={{ y: "100%" }}
+        animate={{ 
+          y: 0,
+          x: retreatImage ? "100vw" : 0,
+          opacity: retreatImage ? 0 : 1
+        }}
+        transition={{ 
+          y: { duration: 2, ease: "easeOut", delay: 0.2 },
+          x: { duration: 1.2, ease: "easeIn" },
+          opacity: { duration: 1, ease: "easeIn" }
+        }}
+      />
+      
       {/* JulioTompsett or retract */}
       {!hideRetractedJT && (
         <TextWrapper
@@ -216,6 +266,22 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         >
           {!retract && !showJT ? renderInitial() : renderRetract()}
         </TextWrapper>
+      )}
+
+      {/* Web Development subtitle */}
+      {showSubtitle && (
+        <SubtitleText
+          initial={{ opacity: 0 }}
+          animate={{ opacity: fadeOutSubtitle ? 0 : 1 }}
+          transition={{ 
+            opacity: { duration: 1.5, ease: "easeInOut" }
+          }}
+          style={{
+            top: "calc(50% + 120px)", // Added vertical gap
+          }}
+        >
+          Web Dev.
+        </SubtitleText>
       )}
 
       {/* JT Studio */}
@@ -248,7 +314,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         <Header style={{ top: slideToHeader ? "60px" : textPos.top }}>
           <NavList>
             <NavItem><NavLink href="#services">Services</NavLink></NavItem>
-            <NavItem><NavLink href="#portfolio">Pricing</NavLink></NavItem>
+            <NavItem><NavLink href="#portfolio">Portfolio</NavLink></NavItem>
             <NavItem><NavLink href="#contact">Contact</NavLink></NavItem>
             <NavItem><NavLink href="#about">About</NavLink></NavItem>
           </NavList>
