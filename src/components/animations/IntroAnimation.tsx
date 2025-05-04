@@ -8,52 +8,50 @@ interface IntroAnimationProps {
 }
 
 // Position correction constants
-const VERTICAL_ADJUSTMENT_TITLE = "-30vh"; // For JulioTompsett and JT Studio
-const VERTICAL_ADJUSTMENT_SUBTITLE = "-25vh"; // For Web Dev text
+const VERTICAL_ADJUSTMENT_TITLE = "-25vh"; // For JulioTompsett and JT Lab (updated)
+const VERTICAL_ADJUSTMENT_SUBTITLE = "-25vh"; // For Web Dev text (updated)
 
-// Full strength glow burst (100%)
+// Full strength glow burst with smoother transitions
 const glowBurst = keyframes`
   0% {
     text-shadow:
-      0 0 5px rgb(132,227,215),
-      0 0 10px rgb(132,227,215),
-      0 0 15px rgb(132,227,215);
+      0 0 2px rgba(132,227,215, 0.3),
+      0 0 5px rgba(132,227,215, 0.2);
   }
   50% {
     text-shadow:
-      0 0 20px rgb(132,227,215),
-      0 0 40px rgb(132,227,215),
-      0 0 60px rgb(132,227,215);
+      0 0 10px rgba(132,227,215, 0.8),
+      0 0 20px rgba(132,227,215, 0.6),
+      0 0 30px rgba(132,227,215, 0.4);
   }
   100% {
     text-shadow:
-      0 0 5px rgb(132,227,215),
-      0 0 10px rgb(132,227,215),
-      0 0 15px rgb(132,227,215);
+      0 0 5px rgba(132,227,215, 0.4),
+      0 0 8px rgba(132,227,215, 0.3);
   }
 `;
 
-// 50% strength continuous glow burst (final state)
+// Continuous glow with smoother transitions
 const continuousGlowBurst = keyframes`
   0% {
     text-shadow:
-      0 0 5px rgb(132,227,215),
-      0 0 7px rgb(132,227,215);
+      0 0 3px rgba(132,227,215, 0.3),
+      0 0 5px rgba(132,227,215, 0.2);
   }
   50% {
     text-shadow:
-      0 0 10px rgb(132,227,215),
-      0 0 20px rgb(132,227,215),
-      0 0 30px rgb(132,227,215);
+      0 0 8px rgba(132,227,215, 0.5),
+      0 0 12px rgba(132,227,215, 0.4),
+      0 0 16px rgba(132,227,215, 0.3);
   }
   100% {
     text-shadow:
-      0 0 5px rgb(132,227,215),
-      0 0 7px rgb(132,227,215);
+      0 0 3px rgba(132,227,215, 0.3),
+      0 0 5px rgba(132,227,215, 0.2);
   }
 `;
 
-// Function to apply hover glow effect for JT Studio logo
+// Function to apply hover glow effect for JT Lab logo
 const logoHoverGlow = css`
   &:hover {
     text-shadow:
@@ -181,7 +179,7 @@ const DarkModeBullet = styled.div<{ animate: boolean }>`
   z-index: 2;
 `;
 
-// Custom hover styles for the JT Studio logo with direct CSS
+// Custom hover styles for the JT Lab logo with direct CSS
 const LogoWrapper = styled(motion.div)<{
   blur?: string;
   fontSize?: string;
@@ -196,7 +194,7 @@ const LogoWrapper = styled(motion.div)<{
   filter: ${({ blur }) => blur || "none"};
   z-index: 3; /* Increased z-index to bring logo to front */
   white-space: nowrap;
-  transition: font-size 0.8s ease-in-out, color 0.8s ease-in-out;
+  transition: font-size 0.8s ease-in-out, color 0.5s ease-in-out; /* Improved color transition */
   
   ${props => props.isInHeader && `
     &:hover {
@@ -252,28 +250,44 @@ const Space = styled.span`
   width: 0.3em;
 `;
 
-// Updated to support simplified glow system with hover effect
-const GlowingStudioText = styled(motion.span)<{ 
-  glowLevel?: 'full' | 'continuous'; 
+// Updated to support improved glow system with transitioning state
+const GlowingLabText = styled(motion.span)<{ 
+  glowLevel?: 'full' | 'continuous' | 'transitioning';
 }>`
   letter-spacing: 0.03em;
   animation: ${props => {
-    if (props.glowLevel === 'full') return css`${glowBurst} 2s ease-out forwards`;
-    if (props.glowLevel === 'continuous') return css`${continuousGlowBurst} 3s ease-in-out infinite`;
-    return 'none';
+    switch(props.glowLevel) {
+      case 'full':
+        return css`${glowBurst} 2s ease-in-out forwards`;
+      case 'continuous':
+        return css`${continuousGlowBurst} 3s ease-in-out infinite`;
+      case 'transitioning':
+        return css`${glowBurst} 1.5s ease-in-out`;
+      default:
+        return 'none';
+    }
   }};
+  transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out;
   ${logoHoverGlow}
 `;
 
-// Updated to support simplified glow system with hover effect
+// Updated to support improved glow system with transitioning state
 const GlowingLetter = styled(motion.span)<{ 
-  glowLevel?: 'full' | 'continuous';
+  glowLevel?: 'full' | 'continuous' | 'transitioning';
 }>`
   animation: ${props => {
-    if (props.glowLevel === 'full') return css`${glowBurst} 2s ease-out forwards`;
-    if (props.glowLevel === 'continuous') return css`${continuousGlowBurst} 3s ease-in-out infinite`;
-    return 'none';
+    switch(props.glowLevel) {
+      case 'full':
+        return css`${glowBurst} 2s ease-in-out forwards`;
+      case 'continuous':
+        return css`${continuousGlowBurst} 3s ease-in-out infinite`;
+      case 'transitioning':
+        return css`${glowBurst} 1.5s ease-in-out`;
+      default:
+        return 'none';
+    }
   }};
+  transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out;
   ${logoHoverGlow}
 `;
 
@@ -476,7 +490,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   // Simplified glow state management
-  const [currentGlowLevel, setCurrentGlowLevel] = useState<'full' | 'continuous' | undefined>(undefined);
+  const [currentGlowLevel, setCurrentGlowLevel] = useState<'full' | 'continuous' | 'transitioning' | undefined>(undefined);
   const [subtleGlow, setSubtleGlow] = useState(false);
   const [themeToggled, setThemeToggled] = useState(false);
   
@@ -527,7 +541,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     };
   };
 
-  // Toggle dark mode with simple direct implementation
+  // Toggle dark mode with smooth transition implementation
   const toggleTheme = () => {
     console.log("Theme toggle clicked, current dark mode:", darkMode);
     
@@ -562,17 +576,19 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
       }, 1200);
     }
     
-    // Reset glow effect then apply new one
-    setCurrentGlowLevel(undefined);
+    // First, apply transitioning glow during the color change
+    setCurrentGlowLevel('transitioning');
     
+    // Then, after color change is complete, apply the full glow burst
     setTimeout(() => {
       setCurrentGlowLevel('full');
       
+      // Finally, transition to continuous glow
       setTimeout(() => {
         setCurrentGlowLevel('continuous');
         setContinuousGlowingActive(true);
       }, 2000);
-    }, 500);
+    }, 800);
   };
   
   // Toggle mobile menu
@@ -653,7 +669,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     // Show the image at the same time as JulioTompsett text (synchronized)
     const imageTimer = setTimeout(() => {
       setImageVisible(true);
-    }, 1000); // Changed to match the subtitle timing (was 2800)
+    }, 1000); // Changed to match the subtitle timing
     
     return () => clearTimeout(imageTimer);
   }, []);
@@ -673,15 +689,18 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setShowJulioTompsett(true); // Set this at the same time as subtitle
       }, 1000),
       
-      // Retract after the name has fully appeared (keep the same timing)
-      setTimeout(() => setRetract(true), 5000), 
+      // Start retraction sooner, after image has settled in
+      setTimeout(() => setRetract(true), 2500), // REDUCED from 5000 to 2500
       
-      // Show JT Studio
+      // Hide all letters (including J) right after retraction is complete
+      setTimeout(() => setHideRetractedJT(true), 3800), // This hides everything
+      
+      // Show JT Lab sooner
       setTimeout(() => {
         setShowJT(true);
         setBlur("none");
         
-        // Initial JT Studio glow burst right when it appears
+        // Initial JT Lab glow burst right when it appears
         setCurrentGlowLevel('full');
         
         // After the glow burst, switch to continuous glow for JT
@@ -692,25 +711,23 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
             setContinuousGlowingActive(true);
           }
         }, 2000);
-      }, 5500),
-      
-      setTimeout(() => setHideRetractedJT(true), 6000), // Hide the retracted JT
+      }, 4000), // REDUCED from 5500 to 4000
       
       // Start retreat of image when moving to header
-      setTimeout(() => setSlideToHeader(true), 6500), // Moving to header
+      setTimeout(() => setSlideToHeader(true), 5000), // REDUCED from 6500 to 5000
       
       // Apply glassmorphism as the header animation starts
-      setTimeout(() => setGlassmorphism(true), 6800),
+      setTimeout(() => setGlassmorphism(true), 5300), // REDUCED from 6800 to 5300
       
       // Set light theme background at the same time
-      setTimeout(() => setLightTheme(true), 6800),
+      setTimeout(() => setLightTheme(true), 5300), // REDUCED from 6800 to 5300
       
       // Show theme toggle immediately after glassomorphism
       // IMPORTANT: Make sure toggle is visible earlier in the sequence
       setTimeout(() => {
         setShowToggle(true);
         console.log("Toggle button should be visible now");
-      }, 6900),
+      }, 5400), // REDUCED from 6900 to 5400
       
       // SINGLE INITIAL BULLET ANIMATION - only run once
       setTimeout(() => {
@@ -736,7 +753,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
             }, 1200);
           }, 50);
         }
-      }, 7200),
+      }, 5700), // REDUCED from 7200 to 5700
       
       // Apply the header glow effect - single glowburst first, then continuous
       setTimeout(() => {
@@ -747,15 +764,15 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setTimeout(() => {
           continuousGlowCleanup = startContinuousGlow();
         }, 2000);
-      }, 8200),
+      }, 6700), // REDUCED from 8200 to 6700
       
-      // Fade out the image and Web Dev text AFTER header animation is complete
+      // Fade out the subtitle and retreat image - return to original behavior
       setTimeout(() => {
         setFadeOutSubtitle(true);
         setRetreatImage(true);
-      }, 8500),
+      }, 7000),
       
-      setTimeout(onComplete, 9000),
+      setTimeout(onComplete, 7500), // REDUCED from 9000 to 7500
     ];
     
     // Make sure to clean up all timers and interval
@@ -807,25 +824,38 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     </NameWrapper>
   );
 
-  const renderRetract = () =>
-    name.split("").map((c,i) => {
-      if (i===0) return <Letter key={i}>J</Letter>;
-      if (c==="T") {
-        return <Letter key={i}
-          initial={{ x:0 }}
-          animate={{ x:tOffset }}
-          transition={{ type:'tween', ease:'linear', duration:0.5 }}
-        >T</Letter>;
-      }
-      return <Letter key={i}
-        initial={{ x:0, opacity:1 }}
-        animate={{ x:`-${i}em`, opacity:0 }}
-        transition={{
-          x:{ duration:0.6, delay:i*0.04 },
-          opacity:{ duration:0.4, delay:i*0.04 }
-        }}
-      >{c}</Letter>;
-    });
+  // Modified retraction animation to include the J
+  const renderRetract = () => (
+    <NameWrapper
+      animate={{ opacity: hideRetractedJT ? 0 : 1 }}
+      transition={{ opacity: { duration: 0.8, ease: "easeOut" } }}
+    >
+      {/* All letters fade out with staggered animation, including J */}
+      {name.split("").map((c, i) => {
+        return (
+          <Letter 
+            key={`letter-${i}`}
+            initial={{ x: 0, opacity: 1 }}
+            animate={{ 
+              // All characters including J will now retract
+              x: `-${i * 0.5}em`, 
+              opacity: 0 
+            }}
+            transition={{
+              x: { duration: 0.6, delay: i * 0.04 },
+              opacity: { duration: 0.4, delay: i * 0.04 }
+            }}
+            ref={el => {
+              if (el && i === 0) jRef.current = el;
+              if (el) lettersRef.current[i] = el;
+            }}
+          >
+            {c}
+          </Letter>
+        );
+      })}
+    </NameWrapper>
+  );
 
   return (
     <Container darkMode={darkMode} lightTheme={lightTheme && !darkMode}>
@@ -884,30 +914,28 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
       />
       
       {/* JulioTompsett or retract */}
-      {!hideRetractedJT && (
-        <LogoWrapper
-          blur={blur}
-          initial={{ opacity:0 }}
-          animate={{ 
-            opacity:1,
-            color: darkMode ? '#fff' : '#000'
-          }}
-          transition={{ 
-            duration:0.6, 
-            color: { duration: 0.8 }
-          }}
-          style={{
-            top: textPos.top,
-            left: leftOffset,
-            transform: "translateY(-50%)",
-            transition: "color 0.8s ease-in-out"
-          }}
-        >
-          {!retract && !showJT ? renderInitial() : renderRetract()}
-        </LogoWrapper>
-      )}
+      <LogoWrapper
+        blur={blur}
+        initial={{ opacity:0 }}
+        animate={{ 
+          opacity: hideRetractedJT ? 0 : 1,
+          color: darkMode ? '#fff' : '#000'
+        }}
+        transition={{ 
+          duration:0.6, 
+          color: { duration: 0.8 }
+        }}
+        style={{
+          top: textPos.top,
+          left: leftOffset,
+          transform: "translateY(-50%)",
+          transition: "color 0.8s ease-in-out"
+        }}
+      >
+        {!retract && !showJT ? renderInitial() : renderRetract()}
+      </LogoWrapper>
 
-      {/* Web Development subtitle - no glow effect */}
+      {/* Web Development subtitle - using original fade animation */}
       {showSubtitle && (
         <SubtitleText
           ref={(el) => { webDevRef.current = el; }}
@@ -931,18 +959,18 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         </SubtitleText>
       )}
 
-      {/* JT Studio - Logo with hover effect */}
+      {/* JT Lab - Logo with hover effect and smooth glow transitions */}
       {showJT && (
         <LogoWrapper
           blur="none"
           initial={{ opacity:0 }}
           animate={{ 
             opacity: 1,
-            color: darkMode ? "#fff" : "#000"
+            color: darkMode ? "#fff" : "#000" // Color changes based on theme
           }}
           transition={{ 
             opacity: { duration: 1 },
-            color: { duration: 0.8 }
+            color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition
           }}
           fontSize={slideToHeader ? "2.2rem" : "4.5rem"}
           isInHeader={slideToHeader}
@@ -951,31 +979,49 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
             left: leftOffset,
             transform: "translateY(-50%)",
             zIndex: 999, // Ensure logo is above all other elements
-            transition: "top 0.8s ease-in-out, font-size 0.8s ease-in-out, color 0.8s ease-in-out",
+            transition: "top 0.8s ease-in-out, font-size 0.8s ease-in-out, color 0.5s ease-in-out", // Improved color transition
             cursor: slideToHeader ? "pointer" : "default" // Add cursor pointer when in header
           }}
         >
           <GlowingLetter 
             initial={{opacity:0}} 
-            animate={{opacity:1}} 
-            transition={{duration:0.8}}
+            animate={{
+              opacity: 1,
+              color: darkMode ? "#fff" : "#000" // Explicit color control
+            }}
+            transition={{
+              duration:0.8,
+              color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition for letter
+            }}
             glowLevel={currentGlowLevel}
           >J</GlowingLetter>
           <GlowingLetter 
             initial={{opacity:0}} 
-            animate={{opacity:1}} 
-            transition={{duration:0.8}}
+            animate={{
+              opacity: 1,
+              color: darkMode ? "#fff" : "#000" // Explicit color control
+            }}
+            transition={{
+              duration:0.8,
+              color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition for letter
+            }}
             glowLevel={currentGlowLevel}
           >T</GlowingLetter>
           <Space/>
-          <GlowingStudioText 
+          <GlowingLabText 
             initial={{opacity:0}} 
-            animate={{opacity:1}} 
-            transition={{duration:1.6}}
+            animate={{
+              opacity: 1,
+              color: darkMode ? "#fff" : "#000" // Explicit color control
+            }}
+            transition={{
+              duration:1.6,
+              color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition for text
+            }}
             glowLevel={currentGlowLevel}
           >
-            Studio
-          </GlowingStudioText>
+            Lab
+          </GlowingLabText>
         </LogoWrapper>
       )}
 
