@@ -11,6 +11,8 @@ interface IntroAnimationProps {
 // Position correction constants
 const VERTICAL_ADJUSTMENT_TITLE = "-22vh"; // For JulioTompsett and JT Lab (updated)
 const VERTICAL_ADJUSTMENT_SUBTITLE = "-25vh"; // For Web Dev text (updated)
+// Adjust horizontal position to 12.5% (halfway between 10% and 15%)
+const HORIZONTAL_ADJUSTMENT = "12.5%"; // Changed to 12.5% (2.5vw shift to the right from original)
 
 // Full strength glow burst with smoother transitions
 const glowBurst = keyframes`
@@ -556,7 +558,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const [blur, setBlur] = useState<"none"|"blur(5px)">("none");
   const [textPos, setTextPos] = useState<{ top: string; left: string }>({
     top: `calc(50% + ${VERTICAL_ADJUSTMENT_TITLE})`, // Adjusted position for title
-    left: "10%",
+    left: HORIZONTAL_ADJUSTMENT, // Updated to use the HORIZONTAL_ADJUSTMENT constant (15%)
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -589,18 +591,9 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   useEffect(() => {
     console.log("mainJTLabText state changed:", mainJTLabText);
     
-    // For immediate debugging, apply power glow whenever mainJTLabText becomes true
-    if (mainJTLabText) {
-      console.log("JT Lab text appeared, applying power glow");
-      setCurrentGlowLevel('power');
-      
-      // Force multiple applications to ensure it takes effect
-      const forceGlowTimers = [
-        setTimeout(() => setCurrentGlowLevel('power'), 50),
-        setTimeout(() => setCurrentGlowLevel('power'), 100),
-        setTimeout(() => setCurrentGlowLevel('power'), 150)
-      ];
-    }
+    // We're removing the immediate power glow trigger from here to allow
+    // our delayed glow in handleScrambleComplete to work properly
+    // The glow will now be controlled exclusively by the handleScrambleComplete function
   }, [mainJTLabText]);
   
   // Direct keyboard shortcut for theme toggle (debugging)
@@ -619,8 +612,8 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Compute left offset once
-  const leftOffset = window.innerWidth * 0.1 + "px";
+  // Compute left offset once for the initial JulioTompsett text
+  const leftOffset = HORIZONTAL_ADJUSTMENT; // Updated to use the constant directly
 
   // Simplified function to set continuous glow
   const startContinuousGlow = () => {
@@ -714,13 +707,13 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         // Mobile adjustments - lower position
         setTextPos({
           top: `calc(35% + ${VERTICAL_ADJUSTMENT_TITLE})`, // Adjusted for mobile
-          left: "10%"
+          left: HORIZONTAL_ADJUSTMENT // Updated to use the constant directly
         });
       } else {
         // Default positioning for larger screens - lower position
         setTextPos({
           top: `calc(50% + ${VERTICAL_ADJUSTMENT_TITLE})`, // Adjusted for desktop
-          left: "10%"
+          left: HORIZONTAL_ADJUSTMENT // Updated to use the constant directly
         });
       }
       
@@ -769,17 +762,10 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     }
   }, [darkMode, slideToHeader, themeToggled, bulletAnimationInProgress]);
 
-  // Add the image appearance to the animation sequence
-  useEffect(() => {
-    // Show the image at the same time as JulioTompsett text (synchronized)
-    const imageTimer = setTimeout(() => {
-      setImageVisible(true);
-    }, 1000); // Changed to match the subtitle timing
-    
-    return () => clearTimeout(imageTimer);
-  }, []);
+  // Image appearance is now handled directly in the main animation sequence
+  // This separate useEffect is no longer needed as we'll synchronize all animations
 
-  // Run the timing for intro animation with delayed JulioTompsett
+  // Run the timing for intro animation with synchronized elements
   useEffect(() => {
     // Track initial animation bullet timer to avoid conflicts
     let initialBulletTimer: NodeJS.Timeout;
@@ -788,32 +774,43 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     let continuousGlowCleanup: (() => void) | undefined;
     
     const timers = [
-      // First show the Web Dev subtitle AND JulioTompsett together - DELAYED by 700ms
+      // Show all elements at the same time: WebDev, JulioTompsett, and image
       setTimeout(() => {
+        console.log("[Animation] Starting initial elements appearance at:", Date.now());
         setShowSubtitle(true);
-        setShowJulioTompsett(true); // Set this at the same time as subtitle
-      }, 1700), // Increased from 1000 to 1700
+        setShowJulioTompsett(true);
+        setImageVisible(true); // Now synchronized with the text elements
+      }, 1000), // Reduced from 1700 to 1000 for faster entrance
       
-      // Show the subtitle text 100ms after WebDev appears
+      // Show the subtitle text right after the main elements appear
       setTimeout(() => {
+        console.log("[Animation] Showing subtitle text at:", Date.now());
         setShowSubtitleText(true);
-      }, 1800),
+      }, 1100), // Reduced from 1800 to 1100 to match new timing
       
-      // Web Dev duration increased by 300ms
-      
-      // Start retraction later - DELAYED BY 1 ADDITIONAL SECOND
-      setTimeout(() => setRetract(true), 5050), // Increased from 4750 to 5050 (+300ms)
+      // Start retraction as soon as the image settled down +250ms
+      // (Image animation takes about 1.5s, so 1000ms + 1500ms + 250ms = 2750ms)
+      setTimeout(() => {
+        console.log("[Animation] Starting retraction at:", Date.now());
+        setRetract(true);
+      }, 2750), // Added extra 100ms delay (was 2650ms)
       
       // Start text scrambling simultaneous with retraction
-      setTimeout(() => setStartScramble(true), 5050), // Increased from 4750 to 5050 (+300ms)
+      setTimeout(() => {
+        console.log("[Animation] Starting scrambling at:", Date.now());
+        setStartScramble(true);
+      }, 2750), // Added extra 100ms delay (was 2650ms)
       
       // Hide all letters (including J) right after retraction is complete
-      setTimeout(() => setHideRetractedJT(true), 6300), // Increased from 6000 to 6300 (+300ms)
+      setTimeout(() => {
+        console.log("[Animation] Hiding retracted JT at:", Date.now());
+        setHideRetractedJT(true);
+      }, 3900), // Adjusted from 5600ms
       
       // Add powerful glow burst just 100ms before transition to header
       setTimeout(() => {
+        console.log("[Animation] Initiating power glow burst at:", Date.now());
         setCurrentGlowLevel('power');
-        console.log("Initiating power glow burst");
         
         // Let's add an intense rapid-fire sequence of setting the glow level to 'power' 
         // multiple times to ensure the animation plays fully and is very noticeable
@@ -822,7 +819,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
           setTimeout(() => setCurrentGlowLevel('power'), 40),
           setTimeout(() => setCurrentGlowLevel('power'), 60)
         ];
-      }, 7700), // Just 100ms before transition
+      }, 5250), // Adjusted from 7000ms
       
       // Start animating JT Lab to header position
       setTimeout(() => {
@@ -836,24 +833,24 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setRetreatImage(true);
         
         // We no longer need to set position explicitly here as it's handled by inline styles
-      }, 7800), // Increased from 7500 to 7800 (+300ms)
+      }, 5350), // Adjusted from 7100ms
       
       // Apply glassmorphism as the header animation starts
-      setTimeout(() => setGlassmorphism(true), 7600), // Increased from 7300 to 7600 (+300ms)
+      setTimeout(() => setGlassmorphism(true), 5150), // Adjusted from 6900ms
       
       // Set light theme background at the same time
-      setTimeout(() => setLightTheme(true), 7600), // Increased from 7300 to 7600 (+300ms)
+      setTimeout(() => setLightTheme(true), 5150), // Adjusted from 6900ms
       
       // Show theme toggle immediately after glassmorphism
       setTimeout(() => {
         setShowToggle(true);
         console.log("Toggle button should be visible now");
-      }, 7700), // Increased from 7400 to 7700 (+300ms)
+      }, 5250), // Adjusted from 7000ms
       
       // Show the navigation items AFTER JT Lab has moved to header position
       setTimeout(() => {
         setShowJT(true); // Show nav items
-      }, 7900), // Increased from 7600 to 7900 (+300ms)
+      }, 5450), // Adjusted from 7200ms
       
       // SINGLE INITIAL BULLET ANIMATION - only run once
       setTimeout(() => {
@@ -879,7 +876,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
             }, 1200);
           }, 50);
         }
-      }, 8000), // Increased from 7700 to 8000 (+300ms)
+      }, 5550), // Adjusted from 7300ms
       
       // Apply the header glow effect - single glowburst first, then continuous
       setTimeout(() => {
@@ -890,12 +887,12 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setTimeout(() => {
           continuousGlowCleanup = startContinuousGlow();
         }, 2000);
-      }, 9000), // Increased from 8700 to 9000 (+300ms)
+      }, 6550), // Adjusted from 8300ms
       
       // No need for a separate retreat image event since we're doing it with the header transition
       // The code for this is moved up to the slideToHeader event
       
-      setTimeout(onComplete, 9800), // Increased from 9500 to 9800 (+300ms)
+      setTimeout(onComplete, 7350), // Adjusted from 9100ms - total animation is now faster
     ];
     
     // Make sure to clean up all timers and interval
@@ -919,6 +916,11 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
       }
     }
   }, [retract, name]);
+  
+  // Log animation events for debugging
+  useEffect(() => {
+    console.log("Animation state changed - JulioTompsett:", showJulioTompsett, "Image:", imageVisible, "Subtitle:", showSubtitle);
+  }, [showJulioTompsett, imageVisible, showSubtitle]);
 
   // No longer using the individual letter animation - to match Web Dev fade style
   const renderInitial = () => (
@@ -982,6 +984,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
 
   // Simplified handleScrambleComplete function
   const handleScrambleComplete = () => {
+    console.log("[Animation] Scramble complete at:", Date.now());
     setScrambleComplete(true);
     
     // Start scrambling the subtitle text at the same time
@@ -992,20 +995,24 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     setMainJTLabText(true); // Show our persistent JT Lab text
     setBlur("none");
     
-    // Apply power glow burst immediately when JT Lab appears
-    setCurrentGlowLevel('power');
-    console.log("Initiating power glow burst immediately after scramble");
-    
-    // Force a reapplication of the power glow to ensure it's noticed
+    // Add a 200ms delay before applying the power glow burst (increased from 100ms)
     setTimeout(() => {
+      // Apply power glow burst after a slight delay when JT Lab appears
+      console.log("[Animation] Applying power glow after delay at:", Date.now());
       setCurrentGlowLevel('power');
-    }, 20);
-    
-    // After the power glow burst, switch to continuous glow for JT Lab
-    setTimeout(() => {
-      setCurrentGlowLevel('continuous');
-      setContinuousGlowingActive(true);
-    }, 2000);
+      
+      // Force a reapplication of the power glow to ensure it's noticed
+      setTimeout(() => {
+        setCurrentGlowLevel('power');
+      }, 20);
+      
+      // After the power glow burst, switch to continuous glow for JT Lab
+      setTimeout(() => {
+        console.log("[Animation] Switching to continuous glow at:", Date.now());
+        setCurrentGlowLevel('continuous');
+        setContinuousGlowingActive(true);
+      }, 2000);
+    }, 200); // Increased to 200ms delay before applying the glow
   };
 
   return (
