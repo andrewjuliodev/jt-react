@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import styled, { keyframes, css } from 'styled-components';
+import ScrambleText from './ScrambleText';
 
 interface IntroAnimationProps {
   onComplete: () => void;
@@ -126,7 +127,7 @@ const HeaderContainer = styled.div<{ glassmorphism?: boolean; darkMode?: boolean
   left: 0;
   width: 100%;
   height: 60px;
-  z-index: 998;
+  z-index: 998; // Lower than JTLabLogo's z-index of 1001
   background: ${props => {
     if (props.glassmorphism && props.darkMode) return 'rgba(0, 0, 0, 0.5)'; // Changed for dark mode
     if (props.glassmorphism) return 'rgba(0, 0, 0, 0.5)'; // Changed to requested value
@@ -216,29 +217,23 @@ const LogoWrapper = styled(motion.div)<{
   }
 `;
 
-const NameWrapper = styled(motion.div)`
-  display: flex;
-`;
-
-const SubtitleText = styled(motion.div)`
-  position: absolute;
+// NEW: Create a consistent text container for all subtitle text
+const CenteredTextContainer = styled.div`
+  position: fixed;
+  top: 40%;
   left: 50%;
-  transform: translateX(-50%);
-  font-family: "Cal Sans", sans-serif;
-  font-size: 12rem;
-  font-weight: bold;
-  color: rgba(0, 0, 0, 0.7);
+  transform: translate(-50%, -50%);
+  width: auto;
   text-align: center;
-  z-index: 1;
-  transition: color 0.4s ease-in-out; /* Make color transition faster and smoother */
+  z-index: 5;
   
   @media (max-width: 768px) {
-    font-size: 8rem;
+    top: 35%;
   }
-  
-  @media (max-width: 480px) {
-    font-size: 5rem;
-  }
+`;
+
+const NameWrapper = styled(motion.div)`
+  display: flex;
 `;
 
 const Letter = styled(motion.span)`
@@ -369,7 +364,8 @@ const NavList = styled.ul<{ mobileMenuOpen?: boolean; darkMode?: boolean }>`
   gap: 3rem;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0
+  padding-left: 180px; /* Increased padding to make room for the JT Lab logo */
   font-family: "Montserrat", sans-serif;
   font-weight: 200;
   transition: color 0.8s ease-in-out;
@@ -469,6 +465,10 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const [showJulioTompsett, setShowJulioTompsett] = useState(false);
   const [imageVisible, setImageVisible] = useState(false);
   
+  // State for text scrambling
+  const [startScramble, setStartScramble] = useState(false);
+  const [scrambleComplete, setScrambleComplete] = useState(false);
+  
   // Modified state variables for border and bullets
   const [headerBorderVisible, setHeaderBorderVisible] = useState(false);
   const [animateLightBullet, setAnimateLightBullet] = useState(false);
@@ -496,6 +496,9 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   
   // Track if continuous glowing is active
   const [continuousGlowingActive, setContinuousGlowingActive] = useState(false);
+  
+  // New state for JT Lab text after scrambling
+  const [mainJTLabText, setMainJTLabText] = useState(false);
 
   const jRef = useRef<HTMLSpanElement>(null);
   const webDevRef = useRef<HTMLDivElement | null>(null);
@@ -689,45 +692,41 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setShowJulioTompsett(true); // Set this at the same time as subtitle
       }, 1000),
       
-      // Start retraction sooner, after image has settled in
-      setTimeout(() => setRetract(true), 2500), // REDUCED from 5000 to 2500
+      // Start retraction later - DELAYED BY 500ms
+      setTimeout(() => setRetract(true), 3050), // INCREASED from 2550 to 3050
+      
+      // Start text scrambling simultaneous with retraction
+      setTimeout(() => setStartScramble(true), 3050), // Start at the same time as retraction
       
       // Hide all letters (including J) right after retraction is complete
-      setTimeout(() => setHideRetractedJT(true), 3800), // This hides everything
+      setTimeout(() => setHideRetractedJT(true), 4300), // Adjusted from 3800 to 4300
       
-      // Show JT Lab sooner
+      // Start animating JT Lab to header position - DELAYED by 500ms to allow JT Lab to be visible
       setTimeout(() => {
-        setShowJT(true);
-        setBlur("none");
+        // Set this first to ensure slide animation works
+        setSlideToHeader(true);
         
-        // Initial JT Lab glow burst right when it appears
-        setCurrentGlowLevel('full');
-        
-        // After the glow burst, switch to continuous glow for JT
-        setTimeout(() => {
-          // After initial burst, use continuous glow until header phase
-          if (!slideToHeader) {
-            setCurrentGlowLevel('continuous');
-            setContinuousGlowingActive(true);
-          }
-        }, 2000);
-      }, 4000), // REDUCED from 5500 to 4000
-      
-      // Start retreat of image when moving to header
-      setTimeout(() => setSlideToHeader(true), 5000), // REDUCED from 6500 to 5000
+        // Now we can hide the scrambled text since we're moving to header
+        setShowSubtitle(false);
+        // We no longer need to set position explicitly here as it's handled by inline styles
+      }, 5500), // Increased from 5000 to 5500 to add 500ms delay
       
       // Apply glassmorphism as the header animation starts
-      setTimeout(() => setGlassmorphism(true), 5300), // REDUCED from 6800 to 5300
+      setTimeout(() => setGlassmorphism(true), 5300),
       
       // Set light theme background at the same time
-      setTimeout(() => setLightTheme(true), 5300), // REDUCED from 6800 to 5300
+      setTimeout(() => setLightTheme(true), 5300),
       
-      // Show theme toggle immediately after glassomorphism
-      // IMPORTANT: Make sure toggle is visible earlier in the sequence
+      // Show theme toggle immediately after glassmorphism
       setTimeout(() => {
         setShowToggle(true);
         console.log("Toggle button should be visible now");
-      }, 5400), // REDUCED from 6900 to 5400
+      }, 5400),
+      
+      // Show the navigation items AFTER JT Lab has moved to header position
+      setTimeout(() => {
+        setShowJT(true); // Show nav items
+      }, 5600),
       
       // SINGLE INITIAL BULLET ANIMATION - only run once
       setTimeout(() => {
@@ -753,7 +752,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
             }, 1200);
           }, 50);
         }
-      }, 5700), // REDUCED from 7200 to 5700
+      }, 5700),
       
       // Apply the header glow effect - single glowburst first, then continuous
       setTimeout(() => {
@@ -764,15 +763,14 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setTimeout(() => {
           continuousGlowCleanup = startContinuousGlow();
         }, 2000);
-      }, 6700), // REDUCED from 8200 to 6700
+      }, 6700),
       
-      // Fade out the subtitle and retreat image - return to original behavior
+      // Retreat the image after animation completes
       setTimeout(() => {
-        setFadeOutSubtitle(true);
         setRetreatImage(true);
       }, 7000),
       
-      setTimeout(onComplete, 7500), // REDUCED from 9000 to 7500
+      setTimeout(onComplete, 7500),
     ];
     
     // Make sure to clean up all timers and interval
@@ -781,7 +779,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
       if (initialBulletTimer) clearTimeout(initialBulletTimer);
       if (continuousGlowCleanup) continuousGlowCleanup();
     };
-  }, [onComplete, bulletAnimationInProgress]);
+  }, [onComplete, bulletAnimationInProgress, windowWidth]);
 
   // On retract, blur & calc T offset
   useEffect(() => {
@@ -856,6 +854,25 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
       })}
     </NameWrapper>
   );
+
+  // Simplified handleScrambleComplete function
+  const handleScrambleComplete = () => {
+    setScrambleComplete(true);
+    
+    // Immediately show the JT Lab text after scrambling completes
+    setShowSubtitle(false); // Hide the original subtitle
+    setMainJTLabText(true); // Show our persistent JT Lab text
+    setBlur("none");
+    
+    // Initial JT Lab glow burst right when it appears
+    setCurrentGlowLevel('full');
+    
+    // After the glow burst, switch to continuous glow for JT Lab
+    setTimeout(() => {
+      setCurrentGlowLevel('continuous');
+      setContinuousGlowingActive(true);
+    }, 2000);
+  };
 
   return (
     <Container darkMode={darkMode} lightTheme={lightTheme && !darkMode}>
@@ -935,97 +952,113 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         {!retract && !showJT ? renderInitial() : renderRetract()}
       </LogoWrapper>
 
-      {/* Web Development subtitle - using original fade animation */}
-      {showSubtitle && (
-        <SubtitleText
-          ref={(el) => { webDevRef.current = el; }}
-          initial={{ opacity: 0 }}
-          animate={{ 
-            opacity: fadeOutSubtitle ? 0 : 1,
-            color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
-          }}
-          transition={{ 
-            opacity: { duration: 1.5, ease: "easeInOut" },
-            color: { duration: 0.4 }
-          }}
-          style={{
-            top: windowWidth <= 768 
-              ? `calc(35% + ${VERTICAL_ADJUSTMENT_SUBTITLE})` 
-              : `calc(50% + ${VERTICAL_ADJUSTMENT_SUBTITLE})`, // Using subtitle vertical adjustment
-            transition: "color 0.4s ease-in-out"
-          }}
-        >
-          Web Dev.
-        </SubtitleText>
-      )}
-
-      {/* JT Lab - Logo with hover effect and smooth glow transitions */}
-      {showJT && (
-        <LogoWrapper
-          blur="none"
-          initial={{ opacity:0 }}
-          animate={{ 
-            opacity: 1,
-            color: darkMode ? "#fff" : "#000" // Color changes based on theme
-          }}
-          transition={{ 
-            opacity: { duration: 1 },
-            color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition
-          }}
-          fontSize={slideToHeader ? "2.2rem" : "4.5rem"}
-          isInHeader={slideToHeader}
-          style={{
-            top: slideToHeader ? "30px" : textPos.top,
-            left: leftOffset,
-            transform: "translateY(-50%)",
-            zIndex: 999, // Ensure logo is above all other elements
-            transition: "top 0.8s ease-in-out, font-size 0.8s ease-in-out, color 0.5s ease-in-out", // Improved color transition
-            cursor: slideToHeader ? "pointer" : "default" // Add cursor pointer when in header
-          }}
-        >
-          <GlowingLetter 
-            initial={{opacity:0}} 
-            animate={{
-              opacity: 1,
-              color: darkMode ? "#fff" : "#000" // Explicit color control
+      {/* Web Development subtitle - use CenteredTextContainer for consistent positioning */}
+      {showSubtitle && !startScramble && (
+        <CenteredTextContainer>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: fadeOutSubtitle ? 0 : 1,
+              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
             }}
-            transition={{
-              duration:0.8,
-              color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition for letter
+            transition={{ 
+              opacity: { duration: 1.5, ease: "easeInOut" },
+              color: { duration: 0.4 }
             }}
-            glowLevel={currentGlowLevel}
-          >J</GlowingLetter>
-          <GlowingLetter 
-            initial={{opacity:0}} 
-            animate={{
-              opacity: 1,
-              color: darkMode ? "#fff" : "#000" // Explicit color control
+            style={{
+              fontFamily: "Cal Sans, sans-serif",
+              fontSize: windowWidth <= 768 ? "8rem" : "12rem",
+              fontWeight: "bold"
             }}
-            transition={{
-              duration:0.8,
-              color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition for letter
-            }}
-            glowLevel={currentGlowLevel}
-          >T</GlowingLetter>
-          <Space/>
-          <GlowingLabText 
-            initial={{opacity:0}} 
-            animate={{
-              opacity: 1,
-              color: darkMode ? "#fff" : "#000" // Explicit color control
-            }}
-            transition={{
-              duration:1.6,
-              color: { duration: 0.5, ease: "easeInOut" } // Smooth color transition for text
-            }}
-            glowLevel={currentGlowLevel}
           >
-            Lab
-          </GlowingLabText>
-        </LogoWrapper>
+            Web Dev.
+          </motion.div>
+        </CenteredTextContainer>
       )}
 
-      {/* Navbar uses same top + translateY */}
+      {/* Text morphing - use CenteredTextContainer for consistent positioning */}
+      {startScramble && !scrambleComplete && (
+        <CenteredTextContainer>
+          {/* Fixed - Use the correct ScrambleText properties matching the interface */}
+          <ScrambleText 
+            startText="Web Dev."
+            endText="JT Lab"
+            duration={1500}
+            color={darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'}
+            fontSize={windowWidth <= 768 ? "8rem" : "12rem"}
+            onComplete={handleScrambleComplete}
+          />
+        </CenteredTextContainer>
+      )}
+
+      {/* JT Lab in center position - use CenteredTextContainer for consistent positioning */}
+      {mainJTLabText && !slideToHeader && (
+        <CenteredTextContainer>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ 
+              opacity: 1,
+              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+            }}
+            transition={{ opacity: { duration: 0.2 } }}
+            style={{
+              fontFamily: "Cal Sans, sans-serif",
+              fontSize: windowWidth <= 768 ? "8rem" : "12rem",
+              fontWeight: "bold",
+              textShadow: currentGlowLevel === 'full'
+                ? "0 0 10px rgba(132,227,215, 0.8), 0 0 20px rgba(132,227,215, 0.6), 0 0 30px rgba(132,227,215, 0.4)"
+                : (currentGlowLevel === 'continuous' 
+                  ? "0 0 8px rgba(132,227,215, 0.5), 0 0 12px rgba(132,227,215, 0.4), 0 0 16px rgba(132,227,215, 0.3)"
+                  : "none"),
+              transition: "text-shadow 0.3s ease-in-out"
+            }}
+          >
+            JT Lab
+          </motion.div>
+        </CenteredTextContainer>
+      )}
+
+      {/* JT Lab in header position - animate from center position */}
+      {mainJTLabText && slideToHeader && (
+        <motion.div
+          initial={{ 
+            position: "fixed",
+            top: "40%",
+            left: "50%", 
+            transform: "translate(-50%, -50%)",
+            fontSize: windowWidth <= 768 ? "8rem" : "12rem"
+          }}
+          animate={{ 
+            position: "fixed",
+            top: "30px",
+            left: "10%", 
+            transform: "translateY(-50%)",
+            fontSize: windowWidth <= 768 ? "1.8rem" : "2.2rem"
+          }}
+          transition={{ 
+            duration: 0.8,
+            ease: "easeInOut" 
+          }}
+          style={{
+            fontFamily: "Cal Sans, sans-serif",
+            fontWeight: "bold",
+            color: darkMode ? '#fff' : '#000',
+            zIndex: 1001,
+            cursor: "pointer",
+            textShadow: currentGlowLevel === 'full'
+              ? "0 0 10px rgba(132,227,215, 0.8), 0 0 20px rgba(132,227,215, 0.6), 0 0 30px rgba(132,227,215, 0.4)"
+              : (currentGlowLevel === 'continuous' 
+                ? "0 0 8px rgba(132,227,215, 0.5), 0 0 12px rgba(132,227,215, 0.4), 0 0 16px rgba(132,227,215, 0.3)"
+                : "none"),
+            transition: "text-shadow 0.3s ease-in-out"
+          }}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          JT Lab
+        </motion.div>
+      )}
+
+      {/* Modified Header - does NOT include JT Lab text since it's handled separately */}
       {showJT && (
         <Header style={{ 
           top: slideToHeader ? "30px" : textPos.top
