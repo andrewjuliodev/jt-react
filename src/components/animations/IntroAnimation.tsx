@@ -9,7 +9,7 @@ interface IntroAnimationProps {
 }
 
 // Position correction constants
-const VERTICAL_ADJUSTMENT_TITLE = "-25vh"; // For JulioTompsett and JT Lab (updated)
+const VERTICAL_ADJUSTMENT_TITLE = "-22vh"; // For JulioTompsett and JT Lab (updated)
 const VERTICAL_ADJUSTMENT_SUBTITLE = "-25vh"; // For Web Dev text (updated)
 
 // Full strength glow burst with smoother transitions
@@ -29,6 +29,27 @@ const glowBurst = keyframes`
     text-shadow:
       0 0 5px rgba(132,227,215, 0.4),
       0 0 8px rgba(132,227,215, 0.3);
+  }
+`;
+
+// Enhanced powerful glow burst for transition moment - shorter duration for immediate impact
+const powerGlowBurst = keyframes`
+  0% {
+    text-shadow:
+      0 0 5px rgba(132,227,215, 0.4),
+      0 0 10px rgba(132,227,215, 0.3);
+  }
+  30% {
+    text-shadow:
+      0 0 30px rgba(132,227,215, 1.0),
+      0 0 60px rgba(132,227,215, 1.0),
+      0 0 90px rgba(132,227,215, 0.9),
+      0 0 120px rgba(132,227,215, 0.8);
+  }
+  100% {
+    text-shadow:
+      0 0 15px rgba(132,227,215, 0.8),
+      0 0 30px rgba(132,227,215, 0.6);
   }
 `;
 
@@ -106,7 +127,7 @@ const Container = styled.div<{ darkMode?: boolean; lightTheme?: boolean }>`
 const ProfileImage = styled(motion.img)`
   position: absolute;
   bottom: 0;
-  left: calc(50% + 5vw); /* Center the image on the x-axis + move 5vw right */
+  left: calc(50% + 12vw); /* Increased from 8vw to 12vw to move image more to the right */
   transform: translateX(-50%); /* Ensure proper centering */
   width: auto;
   height: 90vh;
@@ -232,6 +253,48 @@ const CenteredTextContainer = styled.div`
   }
 `;
 
+// Add wind sweep animation for the subtitle text
+const windSweepIn = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateX(-100px) skewX(10deg);
+    letter-spacing: -5px;
+  }
+  30% {
+    opacity: 0.5;
+  }
+  60% {
+    letter-spacing: 0;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0);
+  }
+`;
+
+// Add a container for the subtitle text
+const SubtitleTextContainer = styled.div`
+  position: fixed;
+  top: calc(40% + 9vh); // Position below the main subtitle - increased by 1vh
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  max-width: 90%;
+  text-align: center;
+  z-index: 5;
+  font-family: "Montserrat", sans-serif;
+  font-size: 1.3rem; // Changed from 1.5rem to 1.3rem
+  font-weight: 400; // Changed from default to 400
+  color: rgba(0, 0, 0, 0.7);
+  transition: color 0.4s ease-in-out;
+  
+  @media (max-width: 768px) {
+    top: calc(35% + 9vh); // Increased by 1vh
+    font-size: 1.1rem; // Proportionally adjusted for mobile
+    max-width: 95%;
+  }
+`;
+
 const NameWrapper = styled(motion.div)`
   display: flex;
 `;
@@ -247,7 +310,7 @@ const Space = styled.span`
 
 // Updated to support improved glow system with transitioning state
 const GlowingLabText = styled(motion.span)<{ 
-  glowLevel?: 'full' | 'continuous' | 'transitioning';
+  glowLevel?: 'full' | 'continuous' | 'transitioning' | 'power';
 }>`
   letter-spacing: 0.03em;
   animation: ${props => {
@@ -258,6 +321,8 @@ const GlowingLabText = styled(motion.span)<{
         return css`${continuousGlowBurst} 3s ease-in-out infinite`;
       case 'transitioning':
         return css`${glowBurst} 1.5s ease-in-out`;
+      case 'power':
+        return css`${powerGlowBurst} 2.5s ease-in-out forwards`;
       default:
         return 'none';
     }
@@ -268,7 +333,7 @@ const GlowingLabText = styled(motion.span)<{
 
 // Updated to support improved glow system with transitioning state
 const GlowingLetter = styled(motion.span)<{ 
-  glowLevel?: 'full' | 'continuous' | 'transitioning';
+  glowLevel?: 'full' | 'continuous' | 'transitioning' | 'power';
 }>`
   animation: ${props => {
     switch(props.glowLevel) {
@@ -278,6 +343,8 @@ const GlowingLetter = styled(motion.span)<{
         return css`${continuousGlowBurst} 3s ease-in-out infinite`;
       case 'transitioning':
         return css`${glowBurst} 1.5s ease-in-out`;
+      case 'power':
+        return css`${powerGlowBurst} 2.5s ease-in-out forwards`;
       default:
         return 'none';
     }
@@ -357,6 +424,7 @@ const Header = styled.header`
   animation: ${fadeIn} 1s ease forwards;
   z-index: 1000;
   transition: top 0.8s ease-in-out, color 0.8s ease-in-out;
+  margin-left: -40px; /* Add negative margin to offset the JT Lab logo position */
 `;
 
 const NavList = styled.ul<{ mobileMenuOpen?: boolean; darkMode?: boolean }>`
@@ -364,8 +432,8 @@ const NavList = styled.ul<{ mobileMenuOpen?: boolean; darkMode?: boolean }>`
   gap: 3rem;
   list-style: none;
   margin: 0;
-  padding: 0
-  padding-left: 180px; /* Increased padding to make room for the JT Lab logo */
+  padding: 0;
+  margin-left: 40px; /* Adjusted from 80px to 40px to center the navbar better */
   font-family: "Montserrat", sans-serif;
   font-weight: 200;
   transition: color 0.8s ease-in-out;
@@ -375,14 +443,15 @@ const NavList = styled.ul<{ mobileMenuOpen?: boolean; darkMode?: boolean }>`
     top: 60px;
     right: ${props => props.mobileMenuOpen ? '0' : '-100%'};
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.5rem; /* Fixed typo: removed the 'a' before 1.5rem */
     background: ${props => props.darkMode ? 'rgba(0, 0, 0, 0.9)' : 'rgba(0, 0, 0, 0.7)'};
     width: 70%;
     max-width: 300px;
     height: calc(100vh - 60px);
     padding: 2rem;
+    margin-left: 0; /* Reset margin for mobile view */
     transition: right 0.3s ease-in-out, background-color 0.8s ease-in-out;
-    align-items: center;
+    align-items: center; /* Center items horizontally in the mobile menu */
     justify-content: flex-start;
   }
 `;
@@ -393,6 +462,8 @@ const NavItem = styled.li`
   
   @media (max-width: 768px) {
     margin: 10px 0;
+    width: 100%; /* Full width in mobile view */
+    text-align: center; /* Center text in mobile view */
   }
 `;
 
@@ -412,6 +483,7 @@ const NavLink = styled.a<{ darkMode?: boolean }>`
     color: #fff;
     font-size: 1.5rem;
     padding: 12px 20px;
+    display: inline-block; /* Better for centering */
   }
 `;
 
@@ -490,7 +562,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   
   // Simplified glow state management
-  const [currentGlowLevel, setCurrentGlowLevel] = useState<'full' | 'continuous' | 'transitioning' | undefined>(undefined);
+  const [currentGlowLevel, setCurrentGlowLevel] = useState<'full' | 'continuous' | 'transitioning' | 'power' | undefined>(undefined);
   const [subtleGlow, setSubtleGlow] = useState(false);
   const [themeToggled, setThemeToggled] = useState(false);
   
@@ -499,10 +571,37 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   
   // New state for JT Lab text after scrambling
   const [mainJTLabText, setMainJTLabText] = useState(false);
+  
+  // Add state for the subtitle text
+  const [showSubtitleText, setShowSubtitleText] = useState(false);
+  const [scrambleSubtitleText, setScrambleSubtitleText] = useState(false);
 
   const jRef = useRef<HTMLSpanElement>(null);
   const webDevRef = useRef<HTMLDivElement | null>(null);
   const lettersRef = useRef<HTMLSpanElement[]>([]);
+  
+  // Add event handler to debug power glow rendering
+  useEffect(() => {
+    console.log("currentGlowLevel state changed:", currentGlowLevel);
+  }, [currentGlowLevel]);
+  
+  // Add event handler to debug mainJTLabText state
+  useEffect(() => {
+    console.log("mainJTLabText state changed:", mainJTLabText);
+    
+    // For immediate debugging, apply power glow whenever mainJTLabText becomes true
+    if (mainJTLabText) {
+      console.log("JT Lab text appeared, applying power glow");
+      setCurrentGlowLevel('power');
+      
+      // Force multiple applications to ensure it takes effect
+      const forceGlowTimers = [
+        setTimeout(() => setCurrentGlowLevel('power'), 50),
+        setTimeout(() => setCurrentGlowLevel('power'), 100),
+        setTimeout(() => setCurrentGlowLevel('power'), 150)
+      ];
+    }
+  }, [mainJTLabText]);
   
   // Direct keyboard shortcut for theme toggle (debugging)
   useEffect(() => {
@@ -548,6 +647,11 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const toggleTheme = () => {
     console.log("Theme toggle clicked, current dark mode:", darkMode);
     
+    // Always ensure continuous glow is active first
+    // This ensures we never lose the glow during transitions
+    setCurrentGlowLevel('continuous');
+    setContinuousGlowingActive(true);
+    
     // Toggle theme states
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
@@ -579,19 +683,17 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
       }, 1200);
     }
     
-    // First, apply transitioning glow during the color change
-    setCurrentGlowLevel('transitioning');
-    
-    // Then, after color change is complete, apply the full glow burst
+    // Apply enhanced glow during the transition (occurs during color change)
+    // Apply enhanced glow AFTER ensuring continuous glow is active
     setTimeout(() => {
-      setCurrentGlowLevel('full');
+      setCurrentGlowLevel('full'); // Enhanced glow for transition effect
       
-      // Finally, transition to continuous glow
+      // Return to continuous glow after the transition effect
       setTimeout(() => {
         setCurrentGlowLevel('continuous');
         setContinuousGlowingActive(true);
       }, 2000);
-    }, 800);
+    }, 100); // Shorter delay for smoother transition
   };
   
   // Toggle mobile menu
@@ -686,47 +788,72 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
     let continuousGlowCleanup: (() => void) | undefined;
     
     const timers = [
-      // First show the Web Dev subtitle AND JulioTompsett together
+      // First show the Web Dev subtitle AND JulioTompsett together - DELAYED by 700ms
       setTimeout(() => {
         setShowSubtitle(true);
         setShowJulioTompsett(true); // Set this at the same time as subtitle
-      }, 1000),
+      }, 1700), // Increased from 1000 to 1700
       
-      // Start retraction later - DELAYED BY 500ms
-      setTimeout(() => setRetract(true), 3050), // INCREASED from 2550 to 3050
+      // Show the subtitle text 100ms after WebDev appears
+      setTimeout(() => {
+        setShowSubtitleText(true);
+      }, 1800),
+      
+      // Web Dev duration increased by 300ms
+      
+      // Start retraction later - DELAYED BY 1 ADDITIONAL SECOND
+      setTimeout(() => setRetract(true), 5050), // Increased from 4750 to 5050 (+300ms)
       
       // Start text scrambling simultaneous with retraction
-      setTimeout(() => setStartScramble(true), 3050), // Start at the same time as retraction
+      setTimeout(() => setStartScramble(true), 5050), // Increased from 4750 to 5050 (+300ms)
       
       // Hide all letters (including J) right after retraction is complete
-      setTimeout(() => setHideRetractedJT(true), 4300), // Adjusted from 3800 to 4300
+      setTimeout(() => setHideRetractedJT(true), 6300), // Increased from 6000 to 6300 (+300ms)
       
-      // Start animating JT Lab to header position - DELAYED by 500ms to allow JT Lab to be visible
+      // Add powerful glow burst just 100ms before transition to header
+      setTimeout(() => {
+        setCurrentGlowLevel('power');
+        console.log("Initiating power glow burst");
+        
+        // Let's add an intense rapid-fire sequence of setting the glow level to 'power' 
+        // multiple times to ensure the animation plays fully and is very noticeable
+        const powerGlowSequence = [
+          setTimeout(() => setCurrentGlowLevel('power'), 20),
+          setTimeout(() => setCurrentGlowLevel('power'), 40),
+          setTimeout(() => setCurrentGlowLevel('power'), 60)
+        ];
+      }, 7700), // Just 100ms before transition
+      
+      // Start animating JT Lab to header position
       setTimeout(() => {
         // Set this first to ensure slide animation works
         setSlideToHeader(true);
         
         // Now we can hide the scrambled text since we're moving to header
         setShowSubtitle(false);
+        
+        // Retreat the image at the same time as JT Lab makes the transition to header
+        setRetreatImage(true);
+        
         // We no longer need to set position explicitly here as it's handled by inline styles
-      }, 5500), // Increased from 5000 to 5500 to add 500ms delay
+      }, 7800), // Increased from 7500 to 7800 (+300ms)
       
       // Apply glassmorphism as the header animation starts
-      setTimeout(() => setGlassmorphism(true), 5300),
+      setTimeout(() => setGlassmorphism(true), 7600), // Increased from 7300 to 7600 (+300ms)
       
       // Set light theme background at the same time
-      setTimeout(() => setLightTheme(true), 5300),
+      setTimeout(() => setLightTheme(true), 7600), // Increased from 7300 to 7600 (+300ms)
       
       // Show theme toggle immediately after glassmorphism
       setTimeout(() => {
         setShowToggle(true);
         console.log("Toggle button should be visible now");
-      }, 5400),
+      }, 7700), // Increased from 7400 to 7700 (+300ms)
       
       // Show the navigation items AFTER JT Lab has moved to header position
       setTimeout(() => {
         setShowJT(true); // Show nav items
-      }, 5600),
+      }, 7900), // Increased from 7600 to 7900 (+300ms)
       
       // SINGLE INITIAL BULLET ANIMATION - only run once
       setTimeout(() => {
@@ -752,7 +879,7 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
             }, 1200);
           }, 50);
         }
-      }, 5700),
+      }, 8000), // Increased from 7700 to 8000 (+300ms)
       
       // Apply the header glow effect - single glowburst first, then continuous
       setTimeout(() => {
@@ -763,14 +890,12 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
         setTimeout(() => {
           continuousGlowCleanup = startContinuousGlow();
         }, 2000);
-      }, 6700),
+      }, 9000), // Increased from 8700 to 9000 (+300ms)
       
-      // Retreat the image after animation completes
-      setTimeout(() => {
-        setRetreatImage(true);
-      }, 7000),
+      // No need for a separate retreat image event since we're doing it with the header transition
+      // The code for this is moved up to the slideToHeader event
       
-      setTimeout(onComplete, 7500),
+      setTimeout(onComplete, 9800), // Increased from 9500 to 9800 (+300ms)
     ];
     
     // Make sure to clean up all timers and interval
@@ -859,15 +984,24 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
   const handleScrambleComplete = () => {
     setScrambleComplete(true);
     
+    // Start scrambling the subtitle text at the same time
+    setScrambleSubtitleText(true);
+    
     // Immediately show the JT Lab text after scrambling completes
     setShowSubtitle(false); // Hide the original subtitle
     setMainJTLabText(true); // Show our persistent JT Lab text
     setBlur("none");
     
-    // Initial JT Lab glow burst right when it appears
-    setCurrentGlowLevel('full');
+    // Apply power glow burst immediately when JT Lab appears
+    setCurrentGlowLevel('power');
+    console.log("Initiating power glow burst immediately after scramble");
     
-    // After the glow burst, switch to continuous glow for JT Lab
+    // Force a reapplication of the power glow to ensure it's noticed
+    setTimeout(() => {
+      setCurrentGlowLevel('power');
+    }, 20);
+    
+    // After the power glow burst, switch to continuous glow for JT Lab
     setTimeout(() => {
       setCurrentGlowLevel('continuous');
       setContinuousGlowingActive(true);
@@ -954,108 +1088,214 @@ const IntroAnimation: React.FC<IntroAnimationProps> = ({ onComplete }) => {
 
       {/* Web Development subtitle - use CenteredTextContainer for consistent positioning */}
       {showSubtitle && !startScramble && (
-        <CenteredTextContainer>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: fadeOutSubtitle ? 0 : 1,
-              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
-            }}
-            transition={{ 
-              opacity: { duration: 1.5, ease: "easeInOut" },
-              color: { duration: 0.4 }
-            }}
-            style={{
-              fontFamily: "Cal Sans, sans-serif",
-              fontSize: windowWidth <= 768 ? "8rem" : "12rem",
-              fontWeight: "bold"
-            }}
-          >
-            Web Dev.
-          </motion.div>
-        </CenteredTextContainer>
+        <>
+          <CenteredTextContainer>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: fadeOutSubtitle ? 0 : 1,
+                color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+              }}
+              transition={{ 
+                opacity: { duration: 1.5, ease: "easeInOut" },
+                color: { duration: 0.4 }
+              }}
+              style={{
+                fontFamily: "Cal Sans, sans-serif",
+                fontSize: windowWidth <= 768 ? "8rem" : "12rem",
+                fontWeight: "bold"
+              }}
+            >
+              Web Dev.
+            </motion.div>
+          </CenteredTextContainer>
+          
+          {/* Subtitle text below Web Dev with wind sweep effect */}
+          {showSubtitleText && (
+            <SubtitleTextContainer>
+              <motion.div
+                initial={{ 
+                  opacity: 0,
+                  x: -100,
+                  skewX: 10,
+                  letterSpacing: "-5px"
+                }}
+                animate={{ 
+                  opacity: fadeOutSubtitle ? 0 : 1,
+                  x: 0,
+                  skewX: 0,
+                  letterSpacing: "0px",
+                  color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+                }}
+                transition={{ 
+                  opacity: { duration: 1.2, ease: [0.25, 0.1, 0.25, 1.0] },
+                  x: { duration: 1.0, ease: [0.16, 1, 0.3, 1] }, // Custom ease for wind effect
+                  skewX: { duration: 1.0, ease: [0.16, 1, 0.3, 1] },
+                  letterSpacing: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] },
+                  color: { duration: 0.4 }
+                }}
+                style={{
+                  fontWeight: 400, // Set to 400
+                  fontSize: windowWidth <= 768 ? "1.1rem" : "1.2rem", // Updated to 1.3rem
+                  display: "inline-block" // Important for letter-spacing animation
+                }}
+              >
+                Crafting Custom Websites: Business, E-commerce, Portfolios & More
+              </motion.div>
+            </SubtitleTextContainer>
+          )}
+        </>
       )}
 
       {/* Text morphing - use CenteredTextContainer for consistent positioning */}
       {startScramble && !scrambleComplete && (
-        <CenteredTextContainer>
-          {/* Fixed - Use the correct ScrambleText properties matching the interface */}
-          <ScrambleText 
-            startText="Web Dev."
-            endText="JT Lab"
-            duration={1500}
-            color={darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'}
-            fontSize={windowWidth <= 768 ? "8rem" : "12rem"}
-            onComplete={handleScrambleComplete}
-          />
-        </CenteredTextContainer>
+        <>
+          <CenteredTextContainer>
+            {/* Fixed - Use the correct ScrambleText properties matching the interface */}
+            <ScrambleText 
+              startText="Web Dev."
+              endText="JT Lab"
+              duration={1000} // Reduced from 1500ms to 1000ms
+              color={darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'}
+              fontSize={windowWidth <= 768 ? "8rem" : "12rem"}
+              onComplete={handleScrambleComplete}
+            />
+          </CenteredTextContainer>
+          
+          {/* Subtitle text that will also scramble */}
+          <SubtitleTextContainer>
+            <ScrambleText 
+              startText="Crafting Custom Websites: Business, E-commerce, Portfolios & More"
+              endText="Landing Sites | SPA | PWA | Web | Mobile Optimized"
+              duration={1000} // Reduced from 1500ms to 1000ms
+              color={darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'}
+              fontSize={windowWidth <= 768 ? "1.1rem" : "1.2rem"} // Updated to 1.3rem
+              style={{ fontWeight: 400 }} // Set to 400
+              // No onComplete needed for this one
+            />
+          </SubtitleTextContainer>
+        </>
       )}
 
       {/* JT Lab in center position - use CenteredTextContainer for consistent positioning */}
       {mainJTLabText && !slideToHeader && (
-        <CenteredTextContainer>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: 1,
-              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
-            }}
-            transition={{ opacity: { duration: 0.2 } }}
-            style={{
-              fontFamily: "Cal Sans, sans-serif",
-              fontSize: windowWidth <= 768 ? "8rem" : "12rem",
-              fontWeight: "bold",
-              textShadow: currentGlowLevel === 'full'
-                ? "0 0 10px rgba(132,227,215, 0.8), 0 0 20px rgba(132,227,215, 0.6), 0 0 30px rgba(132,227,215, 0.4)"
-                : (currentGlowLevel === 'continuous' 
-                  ? "0 0 8px rgba(132,227,215, 0.5), 0 0 12px rgba(132,227,215, 0.4), 0 0 16px rgba(132,227,215, 0.3)"
-                  : "none"),
-              transition: "text-shadow 0.3s ease-in-out"
-            }}
-          >
-            JT Lab
-          </motion.div>
-        </CenteredTextContainer>
+        <>
+          <CenteredTextContainer>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: 1,
+                color: darkMode ? '#fff' : '#000'  // Changed from rgba to solid color
+              }}
+              transition={{ opacity: { duration: 0.2 } }}
+              style={{
+                fontFamily: "Cal Sans, sans-serif",
+                fontSize: windowWidth <= 768 ? "8rem" : "12rem",
+                fontWeight: "bold",
+                textShadow: currentGlowLevel === 'power' 
+                  ? "0 0 30px rgba(132,227,215, 1.0), 0 0 60px rgba(132,227,215, 1.0), 0 0 90px rgba(132,227,215, 0.9), 0 0 120px rgba(132,227,215, 0.8)"
+                  : "0 0 10px rgba(132,227,215, 0.8), 0 0 20px rgba(132,227,215, 0.6), 0 0 30px rgba(132,227,215, 0.4)",  // Enhanced glow
+                WebkitTextFillColor: darkMode ? 'white' : 'black',  // Added for crisp text
+                WebkitTextStroke: '0.5px ' + (darkMode ? 'white' : 'black'),  // Added for crisp outline
+                transition: "color 0.3s ease-in-out, text-shadow 0.3s ease-in-out"
+              }}
+            >
+              JT Lab
+            </motion.div>
+          </CenteredTextContainer>
+          
+          {/* Subtitle text for JT Lab */}
+          <SubtitleTextContainer>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ 
+                opacity: 1,
+                color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)'
+              }}
+              transition={{ opacity: { duration: 0.2 } }}
+              style={{
+                fontWeight: 400, // Set to 400
+                fontSize: windowWidth <= 768 ? "1.1rem" : "1.3rem" // Updated to 1.3rem
+              }}
+            >
+              Landing Sites | SPA | PWA | Web | Mobile Optimized
+            </motion.div>
+          </SubtitleTextContainer>
+        </>
       )}
 
       {/* JT Lab in header position - animate from center position */}
       {mainJTLabText && slideToHeader && (
-        <motion.div
-          initial={{ 
-            position: "fixed",
-            top: "40%",
-            left: "50%", 
-            transform: "translate(-50%, -50%)",
-            fontSize: windowWidth <= 768 ? "8rem" : "12rem"
-          }}
-          animate={{ 
-            position: "fixed",
-            top: "30px",
-            left: "10%", 
-            transform: "translateY(-50%)",
-            fontSize: windowWidth <= 768 ? "1.8rem" : "2.2rem"
-          }}
-          transition={{ 
-            duration: 0.8,
-            ease: "easeInOut" 
-          }}
-          style={{
-            fontFamily: "Cal Sans, sans-serif",
-            fontWeight: "bold",
-            color: darkMode ? '#fff' : '#000',
-            zIndex: 1001,
-            cursor: "pointer",
-            textShadow: currentGlowLevel === 'full'
-              ? "0 0 10px rgba(132,227,215, 0.8), 0 0 20px rgba(132,227,215, 0.6), 0 0 30px rgba(132,227,215, 0.4)"
-              : (currentGlowLevel === 'continuous' 
-                ? "0 0 8px rgba(132,227,215, 0.5), 0 0 12px rgba(132,227,215, 0.4), 0 0 16px rgba(132,227,215, 0.3)"
-                : "none"),
-            transition: "text-shadow 0.3s ease-in-out"
-          }}
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        >
-          JT Lab
-        </motion.div>
+        <>
+          <motion.div
+            initial={{ 
+              position: "fixed",
+              top: "40%",
+              left: "50%", 
+              transform: "translate(-50%, -50%)",
+              fontSize: windowWidth <= 768 ? "8rem" : "12rem"
+            }}
+            animate={{ 
+              position: "fixed",
+              top: "30px",
+              left: "10%", 
+              transform: "translateY(-50%)",
+              fontSize: windowWidth <= 768 ? "1.8rem" : "2.2rem"
+            }}
+            transition={{ 
+              duration: 0.8,
+              ease: "easeInOut" 
+            }}
+            style={{
+              fontFamily: "Cal Sans, sans-serif",
+              fontWeight: "bold",
+              color: darkMode ? '#fff' : '#000',
+              zIndex: 1001,
+              cursor: "pointer",
+              // Always apply at least a minimal glow, with enhanced versions based on state
+              textShadow: currentGlowLevel === 'power'
+                ? "0 0 30px rgba(132,227,215, 1.0), 0 0 60px rgba(132,227,215, 1.0), 0 0 90px rgba(132,227,215, 0.9), 0 0 120px rgba(132,227,215, 0.8)"
+                : (currentGlowLevel === 'full'
+                  ? "0 0 10px rgba(132,227,215, 0.8), 0 0 20px rgba(132,227,215, 0.6), 0 0 30px rgba(132,227,215, 0.4)"
+                  : (currentGlowLevel === 'continuous' 
+                    ? "0 0 8px rgba(132,227,215, 0.5), 0 0 12px rgba(132,227,215, 0.4), 0 0 16px rgba(132,227,215, 0.3)"
+                    : "0 0 5px rgba(132,227,215, 0.3), 0 0 10px rgba(132,227,215, 0.2)")), // Minimal fallback glow
+              transition: "color 0.3s ease-in-out, text-shadow 0.3s ease-in-out",
+              WebkitTextFillColor: darkMode ? 'white' : 'black', // Ensure solid fill color
+              WebkitTextStroke: '0.5px ' + (darkMode ? 'white' : 'black'), // Thinner stroke for header size
+            }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            JT Lab
+          </motion.div>
+          
+          {/* The subtitle text fades out when moving to header */}
+          <motion.div
+            initial={{ 
+              position: "fixed",
+              top: "calc(40% + 9vh)", // Increased by 1vh to match the new spacing
+              left: "50%", 
+              transform: "translateX(-50%)",
+              opacity: 1
+            }}
+            animate={{ 
+              opacity: 0
+            }}
+            transition={{ 
+              opacity: { duration: 0.4, ease: "easeOut" }
+            }}
+            style={{
+              fontFamily: "Montserrat, sans-serif",
+              fontSize: windowWidth <= 768 ? "1.1rem" : "1.3rem", // Updated to 1.3rem
+              fontWeight: 400, // Set to 400
+              color: darkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.7)',
+              textAlign: "center",
+              maxWidth: "90%"
+            }}
+          >
+            Landing Sites | SPA | PWA | Web | Mobile Optimized
+          </motion.div>
+        </>
       )}
 
       {/* Modified Header - does NOT include JT Lab text since it's handled separately */}
